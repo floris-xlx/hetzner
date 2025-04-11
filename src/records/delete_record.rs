@@ -3,6 +3,32 @@ use reqwest::Client;
 use tracing::{error, info};
 
 impl HetznerClient {
+    /// Deletes a DNS record.
+    ///
+    /// # Arguments
+    ///
+    /// * `record_id` - A string slice that holds the ID of the record to be deleted.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// * `Ok(())` if the record is deleted successfully.
+    /// * `Err` containing an error message if the deletion fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use crate::HetznerClient;
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = HetznerClient::new("your_api_token", "https://dns.hetzner.com/api/v1");
+    ///
+    /// match client.delete_record("record_id").await {
+    ///     Ok(_) => println!("Record deleted successfully."),
+    ///     Err(e) => eprintln!("Error deleting record: {}", e),
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn delete_record(&self, record_id: &str) -> Result<(), Box<dyn std::error::Error>> {
         let client: Client = Client::new();
         let url = format!("https://dns.hetzner.com/api/v1/records/{}", record_id);

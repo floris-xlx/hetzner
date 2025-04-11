@@ -3,16 +3,54 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 
+/// Represents a request to update a DNS record.
 #[derive(Serialize)]
 struct UpdateRecordRequest {
+    /// The zone ID associated with the DNS record.
     zone_id: String,
+    /// The type of the DNS record (e.g., A, AAAA, CNAME).
     r#type: String,
+    /// The name of the DNS record.
     name: String,
+    /// The value of the DNS record.
     value: String,
+    /// The time-to-live (TTL) value of the DNS record.
     ttl: u64,
 }
 
 impl HetznerClient {
+    /// Updates an existing DNS record.
+    ///
+    /// # Arguments
+    ///
+    /// * `record_id` - A string slice that holds the ID of the record to be updated.
+    /// * `zone_id` - The zone ID associated with the DNS record.
+    /// * `type_` - The type of the DNS record (e.g., A, AAAA, CNAME).
+    /// * `name` - The name of the DNS record.
+    /// * `value` - The value of the DNS record.
+    /// * `ttl` - The time-to-live (TTL) value of the DNS record.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// * `Ok` containing the JSON response if the record is updated successfully.
+    /// * `Err` containing an error message if the update fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use crate::HetznerClient;
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = HetznerClient::new("your_api_token", "https://dns.hetzner.com/api/v1");
+    ///
+    /// let result = client.update_record("record_id", "zone_id", "A", "example.com", "127.0.0.1", 3600).await;
+    /// match result {
+    ///     Ok(response) => println!("Record updated: {:?}", response),
+    ///     Err(e) => eprintln!("Error updating record: {}", e),
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn update_record(
         &self,
         record_id: &str,
@@ -34,7 +72,7 @@ impl HetznerClient {
         info!("Updating record with ID: {}", record_id);
 
         let url = format!("https://dns.hetzner.com/api/v1/records/{}", record_id);
-        let response = client
+        let response: reqwest::Response = client
             .put(&url)
             .header("Content-Type", "application/json")
             .header("Auth-API-Token", &self.auth_api_token)

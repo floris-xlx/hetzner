@@ -1,0 +1,2 @@
+- [ ] add pagination support
+- [ ] support the full zones api
