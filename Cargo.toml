@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Floris floris@xylex.ai"]
 repository = "https://github.com/floris-xlx/hetzner"
 readme = "README.md"
-categories = ["DNS", "Hetzner", "Networking", "Zones", "DNS record"]
 description = "A Rust library for managing DNS records and zones on Hetzner's platform, providing tools for networking and DNS management."
 edition = "2024"
 license = "MIT"
