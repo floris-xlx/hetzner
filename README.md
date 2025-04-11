@@ -3,7 +3,7 @@
 ### Hetzner API Coverage
 
 #### `zones`
-- [ ] **GetAllZones**: Retrieve a list of all DNS zones associated with your account.
+- [x] **GetAllZones**: Retrieve a list of all DNS zones associated with your account.
 - [ ] **CreateZone**: Create a new DNS zone.
 - [ ] **GetZone**: Retrieve detailed information about a specific DNS zone.
 - [ ] **UpdateZone**: Update the settings of an existing DNS zone.
@@ -13,11 +13,11 @@
 - [ ] **ValidateZoneFilePlain**: Validate a DNS zone file in plain text format.
 
 #### `records`
-- [ ] **GetAllRecords**: Retrieve a list of all DNS records within a zone.
-- [ ] **CreateRecord**: Create a new DNS record within a zone.
-- [ ] **GetRecord**: Retrieve detailed information about a specific DNS record.
-- [ ] **UpdateRecord**: Update an existing DNS record.
-- [ ] **DeleteRecord**: Delete a DNS record.
+- [x] **GetAllRecords**: Retrieve a list of all DNS records within a zone.
+- [x] **CreateRecord**: Create a new DNS record within a zone.
+- [x] **GetRecord**: Retrieve detailed information about a specific DNS record.
+- [x] **UpdateRecord**: Update an existing DNS record.
+- [x] **DeleteRecord**: Delete a DNS record.
 - [ ] **BulkCreateRecords**: Create multiple DNS records in bulk.
 - [ ] **BulkUpdateRecords**: Update multiple DNS records in bulk.
 
