@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod client;
 pub mod zones;
+pub mod records;
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
