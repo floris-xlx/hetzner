@@ -84,11 +84,43 @@ pub struct PrimaryServer {
 }
 
 /// Represents a DNS zone.
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Zone {
-    /// The unique identifier of the zone.
-    pub zone_id: Option<String>,
-    /// The name of the zone.
+    /// The creation timestamp of the DNS zone.
+    pub created: String,
+    /// The last modified timestamp of the DNS zone.
+    pub modified: String,
+    /// The legacy DNS host associated with the zone.
+    pub legacy_dns_host: String,
+    /// The legacy name servers associated with the zone.
+    pub legacy_ns: Vec<String>,
+    /// The name of the DNS zone.
     pub name: String,
-    /// The time-to-live (TTL) value of the zone.
-    pub ttl: u64,
+    /// The name servers associated with the zone.
+    pub ns: Vec<String>,
+    /// The owner of the DNS zone.
+    pub owner: String,
+    /// Indicates if the zone is paused.
+    pub paused: bool,
+    /// The permission level of the DNS zone.
+    pub permission: String,
+    /// The project associated with the DNS zone.
+    pub project: String,
+    /// The registrar of the DNS zone.
+    pub registrar: String,
+    /// The status of the DNS zone.
+    pub status: String,
+    /// The time-to-live (TTL) value of the DNS zone.
+    pub ttl: u32,
+    /// The verification status of the DNS zone.
+    pub verified: String,
+    /// The count of records in the DNS zone.
+    pub records_count: u32,
+    /// Indicates if the zone is a secondary DNS.
+    pub is_secondary_dns: bool,
+    /// The TXT verification details of the DNS zone.
+    pub txt_verification: serde_json::Value,
+    /// The zone ID associated with the DNS zone.
+    pub zone_id: String,
 }

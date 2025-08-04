@@ -1,46 +1,7 @@
-use crate::{HetznerClient, PrimaryServer, Record, RecordType};
+use crate::{HetznerClient, Zone};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tracing::info;
-
-/// Represents a DNS zone with its details.
-#[derive(Deserialize, Debug, Clone)]
-pub struct Zone {
-    /// The creation timestamp of the DNS zone.
-    created: String,
-    /// The last modified timestamp of the DNS zone.
-    modified: String,
-    /// The legacy DNS host associated with the zone.
-    legacy_dns_host: String,
-    /// The legacy name servers associated with the zone.
-    legacy_ns: Vec<String>,
-    /// The name of the DNS zone.
-    name: String,
-    /// The name servers associated with the zone.
-    ns: Vec<String>,
-    /// The owner of the DNS zone.
-    owner: String,
-    /// Indicates if the zone is paused.
-    paused: bool,
-    /// The permission level of the DNS zone.
-    permission: String,
-    /// The project associated with the DNS zone.
-    project: String,
-    /// The registrar of the DNS zone.
-    registrar: String,
-    /// The status of the DNS zone.
-    status: String,
-    /// The time-to-live (TTL) value of the DNS zone.
-    ttl: u32,
-    /// The verification status of the DNS zone.
-    verified: String,
-    /// The count of records in the DNS zone.
-    records_count: u32,
-    /// Indicates if the zone is a secondary DNS.
-    is_secondary_dns: bool,
-    /// The TXT verification details of the DNS zone.
-    txt_verification: serde_json::Value,
-}
 
 #[derive(Deserialize)]
 struct Meta {
