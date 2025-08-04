@@ -27,3 +27,7 @@
 - [ ] **GetPrimaryServer**: Retrieve detailed information about a specific primary DNS server.
 - [ ] **UpdatePrimaryServer**: Update the settings of an existing primary DNS server.
 - [ ] **DeletePrimaryServer**: Delete a primary DNS server.
+
+
+### Notes
+- fixed type bug of duplicate zone types
