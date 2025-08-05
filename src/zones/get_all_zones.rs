@@ -5,19 +5,6 @@ use serde::Deserialize;
 use tracing::info;
 
 #[derive(Deserialize)]
-struct Meta {
-    pagination: Pagination,
-}
-
-#[derive(Deserialize)]
-struct Pagination {
-    page: u32,
-    per_page: u32,
-    last_page: u32,
-    total_entries: u32,
-}
-
-#[derive(Deserialize)]
 pub struct ApiResponse {
     zones: Vec<Zone>,
 }
@@ -102,7 +89,6 @@ mod tests {
             }
         }
     }
-
 
     #[tokio::test]
     async fn test_get_all_zones_with_pagination() {

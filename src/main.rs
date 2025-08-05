@@ -1,6 +1,6 @@
 use dotenv::dotenv;
-use hetzner::{HetznerClient, Zone};
-use std::env;
+use hetzner::{HetznerClient, Record, Zone};
+use std::env::var;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
@@ -11,18 +11,16 @@ async fn main() {
     init_tracing();
 
     let api_token: String =
-        env::var("HETZNER_API_ACCESS_TOKEN").expect("HETZNER_API_ACCESS_TOKEN must be set");
+        var("HETZNER_API_ACCESS_TOKEN").expect("HETZNER_API_ACCESS_TOKEN must be set");
     let client: HetznerClient = HetznerClient::new(api_token);
 
     let zones: Vec<Zone> = client.get_all_zones().await.unwrap();
     info!("zones: {:#?}", zones);
 
+    let zone_id: &str = "HAc8MyLwb36qyiXDSpEmSk";
+    let records: Vec<Record> = client.get_all_records(zone_id).await.unwrap();
 
-
-    // let zone_id: &str = "Sy37QEdpZ5nUD6YFTLHMmZ";
-    // let records = client.get_all_records(zone_id).await.unwrap();
-
-    // info!("records: {:#?}", records);
+    info!("records: {:#?}", records);
 
     // let created_record = client
     //     .create_record("65.108.104.231", 86400, "A", "dexter", zone_id)
@@ -31,12 +29,12 @@ async fn main() {
 
     // println!("{:#?}", created_record);
 
-    // let record_id = "215cbf8916dedeeaae4661370dd43b2a";
-    // let delete_result = client.delete_record(record_id).await;
+    // let record_id: String = "215cbf8916dedeeaae4661370dd43b2a".to_string();
+    // let delete_result: Result<(), Box<dyn std::error::Error>> = client.delete_record(&record_id).await;
 
     // info!("Delete result: {:#?}", delete_result);
 
-    // update record
+    // // update record
     // let updated_record = client
     //     .update_record(
     //         "abbacd389349654544053a4a8364f4c9",
@@ -50,12 +48,10 @@ async fn main() {
 
     // info!("Updated record: {:#?}", updated_record);
 
-
     // let get_record = client
     //     .get_record("abbacd389349654544053a4a8364f4c9")
     //     .await
     //     .unwrap();
-
 
     // info!("Get record: {:#?}", get_record);
 }

@@ -1,5 +1,8 @@
 use crate::{TxtVerification, Zone, ZoneType};
 
+pub mod get_all_zones;
+pub mod zone_types;
+
 impl Zone {
     /// `new` creates a new `Zone` instance.
     ///
@@ -70,4 +73,3 @@ impl Zone {
         }
     }
 }
-pub mod get_all_zones;

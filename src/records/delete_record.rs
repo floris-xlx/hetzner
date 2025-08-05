@@ -1,5 +1,5 @@
 use crate::HetznerClient;
-use reqwest::Client;
+use reqwest::{Client, Response};
 use tracing::{error, info};
 
 impl HetznerClient {
@@ -31,11 +31,11 @@ impl HetznerClient {
     /// ```
     pub async fn delete_record(&self, record_id: &str) -> Result<(), Box<dyn std::error::Error>> {
         let client: Client = Client::new();
-        let url = format!("https://dns.hetzner.com/api/v1/records/{}", record_id);
+        let url: String = format!("https://dns.hetzner.com/api/v1/records/{}", record_id);
 
         info!("Deleting record with ID: {}", record_id);
 
-        let response = client
+        let response: Response = client
             .delete(&url)
             .header("Auth-API-Token", &self.auth_api_token)
             .send()

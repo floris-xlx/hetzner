@@ -19,7 +19,6 @@ pub mod zones;
 
 /// Represents a client for interacting with the Hetzner DNS API.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct HetznerClient {
     /// The authentication API token for accessing the Hetzner DNS API.
     pub auth_api_token: String,
@@ -39,16 +38,16 @@ pub struct HetznerClient {
 }
 
 /// Represents a DNS record.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Record {
     /// The unique identifier of the record.
     pub id: String,
     /// The name of the record.
     pub name: String,
     /// The time-to-live (TTL) value of the record.
-    pub ttl: u64,
+    pub ttl: i64,
     /// The type of the record (e.g., A, AAAA, CNAME).
-    pub type_: String,
+    pub type_: Option<String>,
     /// The value of the record.
     pub value: String,
     /// The zone ID associated with the record.
@@ -88,7 +87,7 @@ pub struct PrimaryServer {
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust
 /// use hetzner::Zone;
 ///
 /// let zone = Zone::new(
@@ -111,7 +110,6 @@ pub struct PrimaryServer {
 ///     hetzner::TxtVerification {
 ///         name: "txt_name".to_string(),
 ///         token: "txt_token".to_string(),
-///         verified: false,
 ///     },
 ///     "unverified".to_string(),
 ///     hetzner::ZoneType {
@@ -171,15 +169,21 @@ pub struct Zone {
 
 /// Represents TXT verification details for a DNS zone.
 #[derive(Deserialize, Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct TxtVerification {
     pub name: String,
     pub token: String,
 }
 
 /// Represents the type details of a DNS zone.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use hetzner::ZoneType;
+///
+/// let zone_type = ZoneType::new("master".to_string(), "zone_type_id".to_string(), "zone_type_name".to_string(), None);
+/// ```
 #[derive(Deserialize, Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ZoneType {
     pub description: String,
     pub id: String,

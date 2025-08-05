@@ -46,22 +46,6 @@ pub struct RecordDetails {
     pub ttl: u64,
 }
 
-/// Represents an error response from the API.
-#[derive(Deserialize, Debug)]
-struct ErrorResponse {
-    /// Details of the error.
-    error: ErrorDetails,
-}
-
-/// Contains detailed information about an error.
-#[derive(Deserialize, Debug)]
-struct ErrorDetails {
-    /// The error code.
-    code: u16,
-    /// The error message.
-    message: String,
-}
-
 impl HetznerClient {
     /// Creates a new DNS record.
     ///
