@@ -39,9 +39,9 @@ impl HetznerClient {
     /// # Examples
     ///
     /// ```
-    /// # use crate::HetznerClient;
+    /// use hetzner::HetznerClient;
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = HetznerClient::new("your_api_token", "https://dns.hetzner.com/api/v1");
+    /// let client = HetznerClient::new("your_api_token".to_string());
     ///
     /// let result = client.update_record("record_id", "zone_id", "A", "example.com", "127.0.0.1", 3600).await;
     /// match result {

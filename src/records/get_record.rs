@@ -1,8 +1,8 @@
 use crate::HetznerClient;
 use reqwest::Client;
 use serde::Deserialize;
-use tracing::{error, info};
 use serde_json::Value;
+use tracing::{error, info};
 
 /// Represents a DNS record with its details.
 #[derive(Deserialize, Debug, Clone)]
@@ -41,9 +41,9 @@ impl HetznerClient {
     /// # Examples
     ///
     /// ```
-    /// # use crate::HetznerClient;
+    /// use hetzner::HetznerClient;
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = HetznerClient::new("your_api_token", "https://dns.hetzner.com/api/v1");
+    /// let client = HetznerClient::new("your_api_token".to_string());
     ///
     /// match client.get_record("record_id").await {
     ///     Ok(record) => println!("Record fetched: {:?}", record),
