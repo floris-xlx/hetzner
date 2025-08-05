@@ -33,7 +33,7 @@ impl HetznerClient {
     /// # Examples
     ///
     /// ```
-    /// # use crate::HetznerClient;
+    /// use hetzner::HetznerClient;
     /// # async fn example() -> Result<(), reqwest::Error> {
     /// let client = HetznerClient::new("your_api_token".to_string());
     ///
