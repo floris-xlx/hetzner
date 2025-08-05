@@ -84,7 +84,7 @@ pub struct PrimaryServer {
 }
 
 /// Represents a DNS zone.
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Zone {
     /// The creation timestamp of the DNS zone.

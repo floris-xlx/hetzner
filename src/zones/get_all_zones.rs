@@ -26,7 +26,7 @@ impl HetznerClient {
     ///
     /// # Returns
     ///
-    /// A `Result` which is:
+    /// A `Result` which is
     /// * `Ok` containing a vector of `Zone` if the zones are fetched successfully.
     /// * `Err` containing a `reqwest::Error` if the fetch fails.
     ///
