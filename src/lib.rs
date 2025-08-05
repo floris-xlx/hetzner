@@ -11,7 +11,6 @@
 //! To use this SDK, you need to create an instance of `HetznerClient` with your API token and base URL. Then, you can call the available methods to perform various operations on DNS records and zones.
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 pub mod client;
 pub mod records;
