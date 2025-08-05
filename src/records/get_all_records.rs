@@ -1,7 +1,7 @@
 use crate::HetznerClient;
 use reqwest::Client;
 use serde::Deserialize;
-use tracing::{info, warn};
+use tracing::info;
 
 /// Represents a DNS record.
 #[derive(Deserialize, Debug, Clone)]

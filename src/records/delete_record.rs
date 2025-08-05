@@ -63,7 +63,7 @@ impl HetznerClient {
                 Err("Not acceptable: The request was not acceptable.".into())
             }
             _ => {
-                let error_message = response
+                let error_message: String = response
                     .text()
                     .await
                     .unwrap_or_else(|_| "Unknown error".to_string());

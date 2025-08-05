@@ -11,6 +11,7 @@
 //! To use this SDK, you need to create an instance of `HetznerClient` with your API token and base URL. Then, you can call the available methods to perform various operations on DNS records and zones.
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub mod client;
 pub mod records;
@@ -84,43 +85,104 @@ pub struct PrimaryServer {
 }
 
 /// Represents a DNS zone.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use hetzner::Zone;
+///
+/// let zone = Zone::new(
+///     "2023-01-01T00:00:00Z".to_string(),
+///     vec!["ns1.example.com".to_string(), "ns2.example.com".to_string()],
+///     "example.com".to_string(),
+///     "zone_id_123".to_string(),
+///     false,
+///     "legacy_dns_host".to_string(),
+///     vec!["legacy_ns1".to_string(), "legacy_ns2".to_string()],
+///     "2023-01-02T00:00:00Z".to_string(),
+///     "owner_id".to_string(),
+///     false,
+///     "read".to_string(),
+///     "project_id".to_string(),
+///     10,
+///     "registrar_name".to_string(),
+///     "active".to_string(),
+///     3600,
+///     hetzner::TxtVerification {
+///         name: "txt_name".to_string(),
+///         token: "txt_token".to_string(),
+///         verified: false,
+///     },
+///     "unverified".to_string(),
+///     hetzner::ZoneType {
+///         description: "master".to_string(),
+///         id: "zone_type_id".to_string(),
+///         name: "zone_type_name".to_string(),
+///         prices: None,
+///     },
+/// );
+/// ```
+///
+/// # Returns
+///
+/// A new `Zone` instance.
+///
 #[derive(Deserialize, Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Zone {
     /// The creation timestamp of the DNS zone.
     pub created: String,
+    /// The zone ID associated with the DNS zone.
+    pub id: String,
+    /// Indicates if the zone is a secondary DNS.
+    pub is_secondary_dns: bool,
+    /// The legacy DNS host associated with the zone.
+    pub legacy_dns_host: String,
+    /// The legacy name servers associated with the zone.
+    pub legacy_ns: Vec<String>,
     /// The last modified timestamp of the DNS zone.
     pub modified: String,
-    /// The legacy DNS host associated with the zone.
-    pub legacy_dns_host: Option<String>,
-    /// The legacy name servers associated with the zone.
-    pub legacy_ns: Option<Vec<String>>,
     /// The name of the DNS zone.
     pub name: String,
     /// The name servers associated with the zone.
-    pub ns: Option<Vec<String>>,
+    pub ns: Vec<String>,
     /// The owner of the DNS zone.
-    pub owner: Option<String>,
+    pub owner: String,
     /// Indicates if the zone is paused.
-    pub paused: Option<bool>,
+    pub paused: bool,
     /// The permission level of the DNS zone.
-    pub permission: Option<String>,
+    pub permission: String,
     /// The project associated with the DNS zone.
-    pub project: Option<String>,
-    /// The registrar of the DNS zone.
-    pub registrar: Option<String>,
-    /// The status of the DNS zone.
-    pub status: Option<String>,
-    /// The time-to-live (TTL) value of the DNS zone.
-    pub ttl: Option<u32>,
-    /// The verification status of the DNS zone.
-    pub verified: Option<String>,
+    pub project: String,
     /// The count of records in the DNS zone.
-    pub records_count: Option<u32>,
-    /// Indicates if the zone is a secondary DNS.
-    pub is_secondary_dns: Option<bool>,
+    pub records_count: i64,
+    /// The registrar of the DNS zone.
+    pub registrar: String,
+    /// The status of the DNS zone.
+    pub status: String,
+    /// The time-to-live (TTL) value of the DNS zone.
+    pub ttl: u32,
     /// The TXT verification details of the DNS zone.
-    pub txt_verification: Option<serde_json::Value>,
-    /// The zone ID associated with the DNS zone.
-    pub zone_id: Option<String>,
+    pub txt_verification: TxtVerification,
+    /// The verification status of the DNS zone.
+    pub verified: String,
+    /// The zone type details of the DNS zone.
+    pub zone_type: ZoneType,
+}
+
+/// Represents TXT verification details for a DNS zone.
+#[derive(Deserialize, Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TxtVerification {
+    pub name: String,
+    pub token: String,
+}
+
+/// Represents the type details of a DNS zone.
+#[derive(Deserialize, Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ZoneType {
+    pub description: String,
+    pub id: String,
+    pub name: String,
+    pub prices: Option<Value>,
 }

@@ -1,7 +1,7 @@
 use crate::HetznerClient;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use tracing::info;
 
 /// Represents a request to create a DNS record.
 #[derive(Serialize, Debug, Clone)]

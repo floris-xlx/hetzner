@@ -1,6 +1,16 @@
 use crate::HetznerClient;
 
 impl HetznerClient {
+    /// Creates a new `HetznerClient` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `auth_api_token` - A string slice that holds the authentication API token for accessing the Hetzner DNS API.
+    ///
+    /// # Returns
+    ///
+    /// A new `HetznerClient` instance.
+    ///
     pub fn new(auth_api_token: String) -> Self {
         HetznerClient {
             auth_api_token,

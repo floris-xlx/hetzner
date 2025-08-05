@@ -1,6 +1,6 @@
 use crate::HetznerClient;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tracing::{error, info};
 
 /// Represents a request to update a DNS record.
