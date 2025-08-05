@@ -40,6 +40,7 @@ impl HetznerClient {
     /// # Ok(())
     /// # }
     /// ```
+    /// 
     pub async fn get_all_records(&self, zone_id: &str) -> Result<Vec<Record>> {
         let client: Client = Client::new();
         let url: String = format!("https://dns.hetzner.com/api/v1/records?zone_id={}", zone_id);
