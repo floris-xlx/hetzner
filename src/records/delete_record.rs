@@ -33,8 +33,6 @@ impl HetznerClient {
         let client: Client = Client::new();
         let url: String = format!("https://dns.hetzner.com/api/v1/records/{}", record_id);
 
-        info!("Deleting record with ID: {}", record_id);
-
         let response: Response = client
             .delete(&url)
             .header("Auth-API-Token", &self.auth_api_token)
@@ -70,6 +68,58 @@ impl HetznerClient {
                 error!("Error deleting record: {}", error_message);
                 Err(format!("Error deleting record: {}", error_message).into())
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env::var;
+    use tokio;
+    use tracing::info;
+
+    #[tokio::test]
+    async fn test_delete_hetzner_test_record() {
+        dotenv::dotenv().ok();
+
+        let api_token: String =
+            var("HETZNER_API_ACCESS_TOKEN").expect("HETZNER_API_ACCESS_TOKEN must be set");
+        let zone_id: String =
+            var("HETZNER_TESTS_ZONE_ID").expect("HETZNER_TESTS_ZONE_ID must be set");
+
+        let client: HetznerClient = crate::HetznerClient::new(api_token);
+
+        // First, create a record to delete
+        let value = "127.0.0.14";
+        let ttl = 3600;
+        let type_ = "A";
+        let name = "hetzner_delete_test_record_delete";
+
+        let create_result = client
+            .create_record(value, ttl, type_, name, &zone_id)
+            .await;
+
+        let record_id = match create_result {
+            Ok(response) => {
+                info!("Create record response: {:#?}", response);
+                response
+                    .get("record")
+                    .and_then(|rec| rec.get("id"))
+                    .and_then(|id| id.as_str())
+                    .unwrap_or("")
+                    .to_string()
+            }
+            Err(e) => panic!("Failed to create record for deletion test: {:?}", e),
+        };
+
+        assert!(!record_id.is_empty(), "Record ID should not be empty");
+
+        // Now, delete the record
+        let delete_result = client.delete_record(&record_id).await;
+        match delete_result {
+            Ok(_) => info!("Record deleted successfully"),
+            Err(e) => panic!("Failed to delete record: {:?}", e),
         }
     }
 }

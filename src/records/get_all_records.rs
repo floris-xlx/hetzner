@@ -2,7 +2,6 @@ use crate::{HetznerClient, Record};
 use anyhow::{Result, anyhow};
 use reqwest::{Client, Response};
 use serde_json::Value;
-use tracing::info;
 
 impl HetznerClient {
     /// Fetches all DNS records for a given zone ID.
@@ -23,11 +22,11 @@ impl HetznerClient {
     /// use hetzner::{HetznerClient, Record};
     /// use std::env::var;
     /// use dotenv::dotenv;
-    /// 
+    ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// dotenv().ok();
-    /// 
+    ///
     /// let api_token: &str =
     /// &var("HETZNER_API_ACCESS_TOKEN").expect("HETZNER_API_ACCESS_TOKEN must be set");
     /// let client: HetznerClient = HetznerClient::new(api_token.to_string());
@@ -40,7 +39,7 @@ impl HetznerClient {
     /// # Ok(())
     /// # }
     /// ```
-    /// 
+    ///
     pub async fn get_all_records(&self, zone_id: &str) -> Result<Vec<Record>> {
         let client: Client = Client::new();
         let url: String = format!("https://dns.hetzner.com/api/v1/records?zone_id={}", zone_id);
@@ -55,9 +54,8 @@ impl HetznerClient {
         // Extract the "records" array from the API response
         let records_value: Value = api_response
             .get("records")
-            .ok_or_else(|| anyhow!("Missing 'records' field in response"))?.clone();
-
-        info!("records_value: {:#?}", records_value);
+            .ok_or_else(|| anyhow!("Missing 'records' field in response"))?
+            .clone();
 
         // The Hetzner API sometimes omits the "ttl" field for some record types.
         // We'll map each record to a Value, insert a default ttl if missing, then deserialize.
@@ -75,8 +73,6 @@ impl HetznerClient {
                     .map_err(|e| anyhow!("Failed to deserialize record: {}", e))
             })
             .collect::<Result<Vec<_>>>()?;
-
-        info!("records: {:#?}", records);
 
         Ok(records)
     }

@@ -2,7 +2,7 @@ use crate::HetznerClient;
 use anyhow::{Result, anyhow};
 use reqwest::Client;
 use serde_json::Value;
-use tracing::{error, info};
+use tracing::error;
 
 impl HetznerClient {
     /// Fetches a DNS record by its ID.
@@ -33,9 +33,7 @@ impl HetznerClient {
     /// ```
     pub async fn get_record(&self, record_id: &str) -> Result<Value> {
         let client: Client = Client::new();
-        let url = format!("https://dns.hetzner.com/api/v1/records/{}", record_id);
-
-        info!("Fetching record with ID: {}", record_id);
+        let url: String = format!("https://dns.hetzner.com/api/v1/records/{}", record_id);
 
         let response = client
             .get(&url)
@@ -74,6 +72,72 @@ impl HetznerClient {
                 error!("Error fetching record: {}", error_message);
                 Err(anyhow!("Error fetching record: {}", error_message))
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::env::var;
+    use tokio;
+    use tracing::info;
+
+    #[tokio::test]
+    async fn test_create_get_delete_record() {
+        dotenv::dotenv().ok();
+
+        let api_token: String =
+            var("HETZNER_API_ACCESS_TOKEN").expect("HETZNER_API_ACCESS_TOKEN must be set");
+        let zone_id: String =
+            var("HETZNER_TESTS_ZONE_ID").expect("HETZNER_TESTS_ZONE_ID must be set");
+
+        let client = crate::HetznerClient::new(api_token);
+
+        // Create a record
+        let value = "127.0.0.6";
+        let ttl = 3600;
+        let type_ = "A";
+        let name = "hetzner_get_test_record_get";
+
+        let create_result = client
+            .create_record(value, ttl, type_, name, &zone_id)
+            .await;
+
+        let record_id = match create_result {
+            Ok(response) => {
+                info!("Create record response: {:#?}", response);
+                response
+                    .get("record")
+                    .and_then(|rec| rec.get("id"))
+                    .and_then(|id| id.as_str())
+                    .unwrap_or("")
+                    .to_string()
+            }
+            Err(e) => panic!("Failed to create record for get test: {:?}", e),
+        };
+
+        assert!(!record_id.is_empty(), "Record ID should not be empty");
+
+        // Get the record
+        let get_result = client.get_record(&record_id).await;
+        match get_result {
+            Ok(record) => {
+                info!("Fetched record: {:#?}", record);
+                let fetched_name = record
+                    .get("record")
+                    .and_then(|rec| rec.get("name"))
+                    .and_then(|n| n.as_str())
+                    .unwrap_or("");
+                assert_eq!(fetched_name, name, "Fetched record name should match");
+            }
+            Err(e) => panic!("Failed to fetch record: {:?}", e),
+        }
+
+        // Delete the record
+        let delete_result = client.delete_record(&record_id).await;
+        match delete_result {
+            Ok(_) => info!("Record deleted successfully"),
+            Err(e) => panic!("Failed to delete record: {:?}", e),
         }
     }
 }

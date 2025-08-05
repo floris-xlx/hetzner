@@ -1,7 +1,6 @@
 use crate::HetznerClient;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use tracing::info;
 
 /// Represents a request to create a DNS record.
 #[derive(Serialize, Debug, Clone)]
@@ -95,9 +94,7 @@ impl HetznerClient {
             zone_id: zone_id.to_string(),
         };
 
-        info!("Creating record with request body: {:#?}", request_body);
-
-        let response = client
+        let response: reqwest::Response = client
             .post("https://dns.hetzner.com/api/v1/records")
             .header("Content-Type", "application/json")
             .header("Auth-API-Token", &self.auth_api_token)
@@ -110,11 +107,86 @@ impl HetznerClient {
         if status.is_success() {
             Ok(response_json)
         } else {
-            let error_message: &str = response_json["error"]["message"]
+            // Try to extract a more detailed error message, including the code and any details
+            let error_message = response_json["error"]["message"]
                 .as_str()
                 .unwrap_or("Unknown error");
-            let error_code: u64 = response_json["error"]["code"].as_u64().unwrap_or(0);
-            Err(format!("Error {}: {}", error_code, error_message).into())
+            let error_code = response_json["error"]["code"]
+                .as_u64()
+                .map(|c| c.to_string())
+                .unwrap_or_else(|| "Unknown".to_string());
+
+            // If the error message contains "Unprocessable Content" and a "taken" field, include it
+            let mut detailed_message = error_message.to_string();
+            if let Some(details) = response_json["error"]["details"].as_object() {
+                if let Some(taken) = details.get("taken").and_then(|v| v.as_str()) {
+                    detailed_message = format!("{}: taken: {}", error_message, taken);
+                }
+            }
+
+            match status {
+                reqwest::StatusCode::UNPROCESSABLE_ENTITY => {
+                    Err(format!("Error 422: {}", detailed_message).into())
+                }
+                reqwest::StatusCode::CONFLICT => {
+                    Err(format!("Error 409 Conflict: {}", detailed_message).into())
+                }
+                _ => Err(format!("Error {}: {}", error_code, detailed_message).into()),
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::env::var;
+    use tokio;
+    use tracing::info;
+
+    #[tokio::test]
+    async fn test_create_hetzner_test_record() {
+        dotenv::dotenv().ok();
+
+        let api_token: String =
+            var("HETZNER_API_ACCESS_TOKEN").expect("HETZNER_API_ACCESS_TOKEN must be set");
+        let zone_id: String =
+            var("HETZNER_TESTS_ZONE_ID").expect("HETZNER_TESTS_ZONE_ID must be set");
+
+        let client = crate::HetznerClient::new(api_token);
+
+        let value = "127.0.0.2";
+        let ttl = 3600;
+        let type_ = "A";
+        let name = "hetzner_test_record_create";
+
+        let result = client
+            .create_record(value, ttl, type_, name, &zone_id)
+            .await;
+
+        match result {
+            Ok(response) => {
+                info!("Create record response: {:#?}", response);
+                // Optionally, assert that the response contains the expected record name
+                let record_name = response
+                    .get("record")
+                    .and_then(|rec| rec.get("name"))
+                    .and_then(|n| n.as_str())
+                    .unwrap_or("");
+                assert_eq!(record_name, name);
+
+                // delete the record
+                let record_id = response
+                    .get("record")
+                    .and_then(|rec| rec.get("id"))
+                    .and_then(|id| id.as_str())
+                    .unwrap_or("");
+                let delete_result = client.delete_record(record_id).await;
+                match delete_result {
+                    Ok(_) => info!("Record deleted successfully"),
+                    Err(e) => panic!("Failed to delete record: {:?}", e),
+                }
+            }
+            Err(e) => panic!("Failed to create record: {:?}", e),
         }
     }
 }
