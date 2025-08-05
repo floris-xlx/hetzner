@@ -1,4 +1,4 @@
-// use dotenv::dotenv;
+use dotenv::dotenv;
 // use hetzner::{HetznerClient, records};
 // use std::env;
 // use tracing::info;
@@ -14,7 +14,7 @@
 //         env::var("HETZNER_API_ACCESS_TOKEN").expect("HETZNER_API_ACCESS_TOKEN must be set");
 //     let client: HetznerClient = HetznerClient::new(api_token);
 
-//     let zones: Vec<hetzner::zones::get_all_zones::Zone> = client.get_all_zones().await.unwrap();
+//     let zones: Vec<hetzner::Zone> = client.get_all_zones().await.unwrap();
 //     info!("zones: {:#?}", zones);
 
 
@@ -69,5 +69,5 @@
 
 #[tokio::main]
 async fn main() {
-    
+    dotenv().ok();
 }

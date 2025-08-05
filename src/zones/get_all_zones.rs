@@ -1,5 +1,5 @@
 use crate::{HetznerClient, Zone};
-use reqwest::Client;
+use reqwest::{Client, Error, Request, Response};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
@@ -48,9 +48,9 @@ impl HetznerClient {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn get_all_zones(&self) -> Result<Vec<Zone>, reqwest::Error> {
+    pub async fn get_all_zones(&self) -> Result<Vec<Zone>, Error> {
         let client: Client = Client::new();
-        let response: reqwest::Response = client
+        let response: Response = client
             .get("https://dns.hetzner.com/api/v1/zones")
             .header("Auth-API-Token", &self.auth_api_token)
             .send()
@@ -59,6 +59,8 @@ impl HetznerClient {
         info!("Response status: {:#?}", response);
 
         let api_response: ApiResponse = response.json().await?;
+
+        info!("api_response: {:#?}", api_response.zones);
         Ok(api_response.zones)
     }
 }
@@ -82,7 +84,7 @@ mod tests {
                 assert!(!zones.is_empty(), "Zones list should not be empty");
                 // Optionally, print the zones for manual inspection
                 for zone in zones {
-                    println!("{:?}", zone);
+                    println!("{:#?}", zone);
                 }
             }
             Err(e) => {

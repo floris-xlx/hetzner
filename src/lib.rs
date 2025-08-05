@@ -11,6 +11,7 @@
 //! To use this SDK, you need to create an instance of `HetznerClient` with your API token and base URL. Then, you can call the available methods to perform various operations on DNS records and zones.
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub mod client;
 pub mod records;
@@ -92,35 +93,35 @@ pub struct Zone {
     /// The last modified timestamp of the DNS zone.
     pub modified: String,
     /// The legacy DNS host associated with the zone.
-    pub legacy_dns_host: String,
+    pub legacy_dns_host: Option<String>,
     /// The legacy name servers associated with the zone.
-    pub legacy_ns: Vec<String>,
+    pub legacy_ns: Option<Vec<String>>,
     /// The name of the DNS zone.
     pub name: String,
     /// The name servers associated with the zone.
-    pub ns: Vec<String>,
+    pub ns: Option<Vec<String>>,
     /// The owner of the DNS zone.
-    pub owner: String,
+    pub owner: Option<String>,
     /// Indicates if the zone is paused.
-    pub paused: bool,
+    pub paused: Option<bool>,
     /// The permission level of the DNS zone.
-    pub permission: String,
+    pub permission: Option<String>,
     /// The project associated with the DNS zone.
-    pub project: String,
+    pub project: Option<String>,
     /// The registrar of the DNS zone.
-    pub registrar: String,
+    pub registrar: Option<String>,
     /// The status of the DNS zone.
-    pub status: String,
+    pub status: Option<String>,
     /// The time-to-live (TTL) value of the DNS zone.
-    pub ttl: u32,
+    pub ttl: Option<u32>,
     /// The verification status of the DNS zone.
-    pub verified: String,
+    pub verified: Option<String>,
     /// The count of records in the DNS zone.
-    pub records_count: u32,
+    pub records_count: Option<u32>,
     /// Indicates if the zone is a secondary DNS.
-    pub is_secondary_dns: bool,
+    pub is_secondary_dns: Option<bool>,
     /// The TXT verification details of the DNS zone.
-    pub txt_verification: serde_json::Value,
+    pub txt_verification: Option<serde_json::Value>,
     /// The zone ID associated with the DNS zone.
-    pub zone_id: String,
+    pub zone_id: Option<String>,
 }
