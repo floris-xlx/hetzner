@@ -10,9 +10,14 @@ pub mod types;
 
 pub use api::cloud::{
     actions::ListActionsParams,
+    domains::DomainsApi,
     enums::{ActionStatus, ServerSort, ServerStatus},
     generated_ops::QueryPairs,
+    load_balancers_api::LoadBalancersApi,
+    private_networks::PrivateNetworksApi,
     servers::{CreateServerInput, ListServersParams},
+    servers_api::ServersFullApi,
+    storage::StorageApi,
 };
 pub use client::HetznerClient;
 pub use error::{ApiError, HetznerError, Result};

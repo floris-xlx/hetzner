@@ -124,6 +124,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### API Facades
+
+The SDK now exposes direct API groups for the areas you requested:
+
+- `client.dns()` legacy DNS API (records/zones)
+- `client.cloud().servers_api()` full Servers API (CRUD/actions/metrics)
+- `client.cloud().domains()` Domain/Zone API (zones/rrsets)
+- `client.cloud().private_networks()` Private Network API
+- `client.cloud().load_balancers()` Load Balancer API
+- `client.cloud().storage()` Storage API (volumes/images/isos)
+- plus complete raw OpenAPI methods via `client.cloud().<operation_id>(...)`
+
 ## Cloud API Example Request
 
 Since a new project commonly has no servers yet, this is the expected empty list shape.
