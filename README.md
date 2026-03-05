@@ -2,6 +2,12 @@
 
 A Rust SDK for Hetzner APIs with a domain-oriented structure and typed error handling.
 
+## Documentation
+
+- Full docs: `docs/COMPREHENSIVE_DOCUMENTATION.md`
+- API reference: `docs/API_REFERENCE.md`
+- Project-owned OpenAPI: `openapi.json`
+
 ## API Coverage
 
 ### `cloud` (openapi-backed)
