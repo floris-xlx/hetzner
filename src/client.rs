@@ -1,29 +1,288 @@
-use crate::HetznerClient;
+use crate::api::{
+    cloud::CloudApi,
+    dns::{DnsApi, records::UpdateRecordInput},
+};
+use crate::error::{ApiError, ApiErrorEnvelope, HetznerError, Result};
+use crate::types::{CreatedRecord, Record, RecordEnvelope, Zone};
+use reqwest::{Method, StatusCode};
+use serde::{Serialize, de::DeserializeOwned};
+use serde_json::Value;
+
+const DEFAULT_DNS_BASE_URL: &str = "https://dns.hetzner.com/api/v1";
+const DEFAULT_CLOUD_BASE_URL: &str = "https://api.hetzner.cloud/v1";
+
+#[derive(Debug, Clone)]
+pub struct HetznerClient {
+    pub(crate) http: reqwest::Client,
+    pub(crate) auth_api_token: String,
+    pub(crate) dns_base_url: String,
+    pub(crate) cloud_base_url: String,
+}
 
 impl HetznerClient {
-    /// Creates a new `HetznerClient` instance.
-    ///
-    /// # Arguments
-    ///
-    /// * `auth_api_token` - A string slice that holds the authentication API token for accessing the Hetzner DNS API.
-    ///
-    /// # Returns
-    ///
-    /// A new `HetznerClient` instance.
-    ///
-    pub fn new(auth_api_token: String) -> Self {
-        HetznerClient {
-            auth_api_token,
-            base_url: String::from("https://dns.hetzner.com/api/v1"),
-            name: None,
-            page: None,
-            per_page: None,
-            search_name: None,
-            zone_id: None,
-            ttl: None,
-            value: None,
-            type_: None,
-            record_id: None,
+    pub fn new(auth_api_token: impl Into<String>) -> Self {
+        Self {
+            http: reqwest::Client::new(),
+            auth_api_token: auth_api_token.into(),
+            dns_base_url: DEFAULT_DNS_BASE_URL.to_string(),
+            cloud_base_url: DEFAULT_CLOUD_BASE_URL.to_string(),
         }
+    }
+
+    pub fn with_dns_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.dns_base_url = base_url.into();
+        self
+    }
+
+    #[deprecated(note = "Use with_dns_base_url(...) or with_cloud_base_url(...) instead.")]
+    pub fn with_base_url(self, base_url: impl Into<String>) -> Self {
+        self.with_dns_base_url(base_url)
+    }
+
+    pub fn with_cloud_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.cloud_base_url = base_url.into();
+        self
+    }
+
+    pub fn dns(&self) -> DnsApi<'_> {
+        DnsApi { client: self }
+    }
+
+    pub fn cloud(&self) -> CloudApi<'_> {
+        CloudApi { client: self }
+    }
+
+    pub(crate) async fn request_dns<T: DeserializeOwned>(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<Value>,
+    ) -> Result<T> {
+        self.request_to_base(
+            &self.dns_base_url,
+            "Auth-API-Token",
+            "",
+            method,
+            path,
+            Option::<&Vec<(String, String)>>::None,
+            body,
+        )
+        .await
+    }
+
+    pub(crate) async fn request_dns_unit(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<Value>,
+    ) -> Result<()> {
+        self.request_unit_to_base(
+            &self.dns_base_url,
+            "Auth-API-Token",
+            "",
+            method,
+            path,
+            Option::<&Vec<(String, String)>>::None,
+            body,
+        )
+        .await
+    }
+
+    pub(crate) async fn request_cloud<T: DeserializeOwned, Q: Serialize>(
+        &self,
+        method: Method,
+        path: &str,
+        query: Option<&Q>,
+        body: Option<Value>,
+    ) -> Result<T> {
+        self.request_to_base(
+            &self.cloud_base_url,
+            "Authorization",
+            "Bearer ",
+            method,
+            path,
+            query,
+            body,
+        )
+        .await
+    }
+
+    async fn request_to_base<T: DeserializeOwned, Q: Serialize>(
+        &self,
+        base_url: &str,
+        auth_header: &str,
+        auth_prefix: &str,
+        method: Method,
+        path: &str,
+        query: Option<&Q>,
+        body: Option<Value>,
+    ) -> Result<T> {
+        let url = format!("{}/{}", base_url.trim_end_matches('/'), path);
+        let mut req = self
+            .http
+            .request(method, &url)
+            .header(auth_header, format!("{auth_prefix}{}", self.auth_api_token));
+
+        if let Some(params) = query {
+            req = req.query(params);
+        }
+
+        if let Some(payload) = body {
+            req = req.json(&payload);
+        }
+
+        let response = req.send().await?;
+        let status = response.status();
+
+        if status.is_success() {
+            let parsed = response.json::<T>().await?;
+            return Ok(parsed);
+        }
+
+        let body_text = response.text().await?;
+        Err(HetznerError::Api(parse_api_error(status, body_text)))
+    }
+
+    async fn request_unit_to_base<Q: Serialize>(
+        &self,
+        base_url: &str,
+        auth_header: &str,
+        auth_prefix: &str,
+        method: Method,
+        path: &str,
+        query: Option<&Q>,
+        body: Option<Value>,
+    ) -> Result<()> {
+        let url = format!("{}/{}", base_url.trim_end_matches('/'), path);
+        let mut req = self
+            .http
+            .request(method, &url)
+            .header(auth_header, format!("{auth_prefix}{}", self.auth_api_token));
+
+        if let Some(params) = query {
+            req = req.query(params);
+        }
+
+        if let Some(payload) = body {
+            req = req.json(&payload);
+        }
+
+        let response = req.send().await?;
+        let status = response.status();
+
+        if status.is_success() {
+            return Ok(());
+        }
+
+        let body_text = response.text().await?;
+        Err(HetznerError::Api(parse_api_error(status, body_text)))
+    }
+
+    #[deprecated(
+        note = "Legacy DNS methods on HetznerClient are deprecated. Use client.dns().list_zones()."
+    )]
+    pub async fn get_all_zones(&self) -> Result<Vec<Zone>> {
+        self.dns().list_zones().await
+    }
+
+    #[deprecated(
+        note = "Legacy DNS methods on HetznerClient are deprecated. Use client.dns().records(zone_id).list()."
+    )]
+    pub async fn get_all_records(&self, zone_id: &str) -> Result<Vec<Record>> {
+        self.dns().records(zone_id).list().await
+    }
+
+    #[deprecated(
+        note = "Legacy DNS methods on HetznerClient are deprecated. Use client.dns().records(zone_id).create(...)."
+    )]
+    pub async fn create_record(
+        &self,
+        value: &str,
+        ttl: u64,
+        type_: &str,
+        name: &str,
+        zone_id: &str,
+    ) -> Result<CreatedRecord> {
+        self.dns()
+            .records(zone_id)
+            .create(name, type_, value, ttl)
+            .await
+    }
+
+    #[deprecated(
+        note = "Legacy DNS methods on HetznerClient are deprecated. Use client.dns().record(record_id)."
+    )]
+    pub async fn get_record(&self, record_id: &str) -> Result<RecordEnvelope> {
+        self.dns().record(record_id).get().await
+    }
+
+    #[deprecated(
+        note = "Legacy DNS methods on HetznerClient are deprecated. Use client.dns().record(record_id).update(...)."
+    )]
+    pub async fn update_record(
+        &self,
+        record_id: &str,
+        zone_id: &str,
+        type_: &str,
+        name: &str,
+        value: &str,
+        ttl: u64,
+    ) -> Result<RecordEnvelope> {
+        self.dns()
+            .record(record_id)
+            .update(UpdateRecordInput {
+                zone_id: zone_id.to_string(),
+                record_type: type_.to_string(),
+                name: name.to_string(),
+                value: value.to_string(),
+                ttl,
+            })
+            .await
+    }
+
+    #[deprecated(
+        note = "Legacy DNS methods on HetznerClient are deprecated. Use client.dns().record(record_id).delete()."
+    )]
+    pub async fn delete_record(&self, record_id: &str) -> Result<()> {
+        self.dns().record(record_id).delete().await
+    }
+}
+
+fn parse_api_error(status: StatusCode, body_text: String) -> ApiError {
+    let parsed_error = serde_json::from_str::<ApiErrorEnvelope>(&body_text);
+
+    match parsed_error {
+        Ok(envelope) => ApiError {
+            status,
+            code: envelope.error.code,
+            message: envelope.error.message,
+            details: envelope.error.details,
+        },
+        Err(_) => ApiError {
+            status,
+            code: status_code_to_default_code(status).to_string(),
+            message: body_text,
+            details: None,
+        },
+    }
+}
+
+fn status_code_to_default_code(status: StatusCode) -> &'static str {
+    match status {
+        StatusCode::BAD_REQUEST => "json_error",
+        StatusCode::UNAUTHORIZED => "unauthorized",
+        StatusCode::FORBIDDEN => "forbidden",
+        StatusCode::NOT_FOUND => "not_found",
+        StatusCode::METHOD_NOT_ALLOWED => "method_not_allowed",
+        StatusCode::CONFLICT => "conflict",
+        StatusCode::GONE => "deprecated_api_endpoint",
+        StatusCode::PRECONDITION_FAILED => "resource_unavailable",
+        StatusCode::UNPROCESSABLE_ENTITY => "invalid_input",
+        StatusCode::LOCKED => "locked",
+        StatusCode::TOO_MANY_REQUESTS => "rate_limit_exceeded",
+        StatusCode::INTERNAL_SERVER_ERROR => "server_error",
+        StatusCode::SERVICE_UNAVAILABLE => "unavailable",
+        StatusCode::GATEWAY_TIMEOUT => "timeout",
+        _ => "unknown_error",
     }
 }
