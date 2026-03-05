@@ -19,6 +19,9 @@ version = "1.44.2"
 features = ["env-filter"]
 version = "0.3.19"
 
+[dev-dependencies]
+httpmock = "0.7.0"
+
 [package]
 authors = ["Floris floris@xylex.ai"]
 description = "A Rust library for managing DNS records and zones on Hetzner's platform, providing tools for networking and DNS management."

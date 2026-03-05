@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "hetzner": {
+      "command": "node",
+      "args": ["/Users/floris/Documents/GitHub/hetzner/mcp/src/index.js"],
+      "env": {
+        "HCLOUD_TOKEN": "tbzcPCFQOYdvw5udQKYpaGeeT32GvUix2Iw7T6z0ZVy22c5EnmTVCxgkYOz8b4p5"
+      }
+    }
+  }
+}
