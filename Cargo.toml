@@ -1,18 +1,30 @@
+[dependencies]
+dotenv = "0.15.0"
+serde_json = "1.0.140"
+tracing = "0.1.41"
+
+[dependencies.reqwest]
+features = ["json"]
+version = "0.12.15"
+
+[dependencies.serde]
+features = ["derive"]
+version = "1.0.219"
+
+[dependencies.tokio]
+features = ["full"]
+version = "1.44.2"
+
+[dependencies.tracing-subscriber]
+features = ["env-filter"]
+version = "0.3.19"
+
 [package]
-name = "hetzner"
-version = "0.3.1"
 authors = ["Floris floris@xylex.ai"]
-repository = "https://github.com/floris-xlx/hetzner"
-readme = "README.md"
 description = "A Rust library for managing DNS records and zones on Hetzner's platform, providing tools for networking and DNS management."
 edition = "2024"
 license = "MIT"
-
-[dependencies]
-dotenv = "0.15.0"
-reqwest = { version = "0.12.15", features = ["json"] }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-tokio = { version = "1.44.2", features = ["full"] }
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+name = "hetzner"
+readme = "README.md"
+repository = "https://github.com/floris-xlx/hetzner"
+version = "1.0.0"

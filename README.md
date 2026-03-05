@@ -1,5 +1,7 @@
 # Hetzner API Rust SDK
 
+current version: `1.0.0`
+
 A Rust SDK for Hetzner APIs with a domain-oriented structure and typed error handling.
 
 ## Documentation
