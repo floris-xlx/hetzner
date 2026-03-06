@@ -3,11 +3,25 @@
   "info": {
     "title": "Hetzner SDK Unified API",
     "version": "1.0.0",
-    "description": "Curated OpenAPI document for the SDK-first API families: DNS/Domain, Servers, Private Networks, Load Balancers, Storage, and Actions."
+    "description": "Curated OpenAPI document for the SDK-first API families: DNS/Domain, Servers, Private Networks, Load Balancers, Storage, and Actions.\n\nThis document intentionally bundles both Hetzner Cloud and Hetzner DNS surfaces to drive SDK generation, contract tests, and documentation previews from a single source.\n\nAuthentication:\n- Cloud operations: `Authorization: Bearer <token>` against https://api.hetzner.cloud/v1\n- DNS operations: `Auth-API-Token: <token>` against https://dns.hetzner.com/api/v1\n\nErrors consistently follow `{\"error\": {\"code\": string, \"message\": string, \"details\": object|null}}`. Rate limiting uses `RateLimit-Limit`, `RateLimit-Remaining`, and `RateLimit-Reset` headers. Each response includes `X-Request-Id` for support correlation.\n\nList endpoints accept `page`/`per_page` and return pagination info via `meta.pagination` and optional `Link` headers.",
+    "contact": {
+      "name": "Hetzner SDK maintainers",
+      "url": "https://github.com/floris-xlx/hetzner",
+      "email": "floris@xylex.ai"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
   },
   "servers": [
     {
-      "url": "https://api.hetzner.cloud/v1"
+      "url": "https://api.hetzner.cloud/v1",
+      "description": "Hetzner Cloud API (servers, actions, load balancers, storage, networks)."
+    },
+    {
+      "url": "https://dns.hetzner.com/api/v1",
+      "description": "Hetzner DNS API (zones, records)."
     }
   ],
   "tags": [
@@ -33,9 +47,13 @@
     },
     {
       "name": "Domains",
-      "description": "Zone/domain and RRSet resources."
+      "description": "DNS zones and resource records over the Hetzner DNS API (`Auth-API-Token` header, base https://dns.hetzner.com/api/v1)."
     }
   ],
+  "externalDocs": {
+    "description": "Repository docs and usage examples",
+    "url": "https://github.com/floris-xlx/hetzner"
+  },
   "paths": {
     "/actions": {
       "get": {

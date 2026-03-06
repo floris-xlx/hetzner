@@ -7,6 +7,8 @@ use crate::types::{CreatedRecord, Record, RecordEnvelope, Zone};
 use reqwest::{Method, StatusCode};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Value;
+use std::time::Instant;
+use tracing::{debug, error};
 
 const DEFAULT_DNS_BASE_URL: &str = "https://dns.hetzner.com/api/v1";
 const DEFAULT_CLOUD_BASE_URL: &str = "https://api.hetzner.cloud/v1";
@@ -118,6 +120,8 @@ impl HetznerClient {
         body: Option<Value>,
     ) -> Result<T> {
         let url = format!("{}/{}", base_url.trim_end_matches('/'), path);
+        let method_for_log = method.clone();
+        let start = Instant::now();
         let mut req = self
             .http
             .request(method, &url)
@@ -133,14 +137,38 @@ impl HetznerClient {
 
         let response = req.send().await?;
         let status = response.status();
+        let request_id = response
+            .headers()
+            .get("X-Request-Id")
+            .and_then(|v| v.to_str().ok())
+            .map(|v| v.to_owned());
 
         if status.is_success() {
             let parsed = response.json::<T>().await?;
+            debug!(
+                method = %method_for_log,
+                %url,
+                status = %status,
+                request_id = request_id.as_deref().unwrap_or(""),
+                elapsed_ms = start.elapsed().as_millis(),
+                "hetzner request succeeded"
+            );
             return Ok(parsed);
         }
 
         let body_text = response.text().await?;
-        Err(HetznerError::Api(parse_api_error(status, body_text)))
+        let api_error = parse_api_error(status, body_text.clone());
+        error!(
+            method = %method_for_log,
+            %url,
+            status = %status,
+            code = %api_error.code,
+            request_id = request_id.as_deref().unwrap_or(""),
+            elapsed_ms = start.elapsed().as_millis(),
+            body_snippet = %truncate_for_log(&body_text, 1024),
+            "hetzner request failed"
+        );
+        Err(HetznerError::Api(api_error))
     }
 
     async fn request_unit_to_base<Q: Serialize>(
@@ -154,6 +182,8 @@ impl HetznerClient {
         body: Option<Value>,
     ) -> Result<()> {
         let url = format!("{}/{}", base_url.trim_end_matches('/'), path);
+        let method_for_log = method.clone();
+        let start = Instant::now();
         let mut req = self
             .http
             .request(method, &url)
@@ -169,13 +199,37 @@ impl HetznerClient {
 
         let response = req.send().await?;
         let status = response.status();
+        let request_id = response
+            .headers()
+            .get("X-Request-Id")
+            .and_then(|v| v.to_str().ok())
+            .map(|v| v.to_owned());
 
         if status.is_success() {
+            debug!(
+                method = %method_for_log,
+                %url,
+                status = %status,
+                request_id = request_id.as_deref().unwrap_or(""),
+                elapsed_ms = start.elapsed().as_millis(),
+                "hetzner request succeeded"
+            );
             return Ok(());
         }
 
         let body_text = response.text().await?;
-        Err(HetznerError::Api(parse_api_error(status, body_text)))
+        let api_error = parse_api_error(status, body_text.clone());
+        error!(
+            method = %method_for_log,
+            %url,
+            status = %status,
+            code = %api_error.code,
+            request_id = request_id.as_deref().unwrap_or(""),
+            elapsed_ms = start.elapsed().as_millis(),
+            body_snippet = %truncate_for_log(&body_text, 1024),
+            "hetzner request failed"
+        );
+        Err(HetznerError::Api(api_error))
     }
 
     #[deprecated(
@@ -264,6 +318,16 @@ fn parse_api_error(status: StatusCode, body_text: String) -> ApiError {
             message: body_text,
             details: None,
         },
+    }
+}
+
+fn truncate_for_log(body: &str, max_len: usize) -> String {
+    let mut chars = body.chars();
+    let prefix: String = chars.by_ref().take(max_len).collect();
+    if chars.next().is_some() {
+        format!("{prefix}... (truncated)")
+    } else {
+        prefix
     }
 }
 
