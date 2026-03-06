@@ -4,7 +4,7 @@ use crate::api::{
 };
 use crate::error::{ApiError, ApiErrorEnvelope, HetznerError, Result};
 use crate::types::{CreatedRecord, Record, RecordEnvelope, Zone};
-use reqwest::{Method, StatusCode};
+use reqwest::{header::HeaderMap, Method, StatusCode};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Value;
 use std::time::Instant;
@@ -142,21 +142,45 @@ impl HetznerClient {
             .get("X-Request-Id")
             .and_then(|v| v.to_str().ok())
             .map(|v| v.to_owned());
+        let rate_limit = rate_limit_snapshot(response.headers());
+        let body_bytes = response.bytes().await?;
 
         if status.is_success() {
-            let parsed = response.json::<T>().await?;
-            debug!(
-                method = %method_for_log,
-                %url,
-                status = %status,
-                request_id = request_id.as_deref().unwrap_or(""),
-                elapsed_ms = start.elapsed().as_millis(),
-                "hetzner request succeeded"
-            );
-            return Ok(parsed);
+            match serde_json::from_slice::<T>(&body_bytes) {
+                Ok(parsed) => {
+                    debug!(
+                        method = %method_for_log,
+                        %url,
+                        status = %status,
+                        request_id = request_id.as_deref().unwrap_or(""),
+                        rate_limit_limit = rate_limit.limit,
+                        rate_limit_remaining = rate_limit.remaining,
+                        rate_limit_reset = rate_limit.reset,
+                        elapsed_ms = start.elapsed().as_millis(),
+                        "hetzner request succeeded"
+                    );
+                    return Ok(parsed);
+                }
+                Err(err) => {
+                    error!(
+                        method = %method_for_log,
+                        %url,
+                        status = %status,
+                        request_id = request_id.as_deref().unwrap_or(""),
+                        rate_limit_limit = rate_limit.limit,
+                        rate_limit_remaining = rate_limit.remaining,
+                        rate_limit_reset = rate_limit.reset,
+                        parse_error = %err,
+                        body_snippet = %truncate_for_log(&String::from_utf8_lossy(&body_bytes), 1024),
+                        elapsed_ms = start.elapsed().as_millis(),
+                        "hetzner request parse failed"
+                    );
+                    return Err(err.into());
+                }
+            }
         }
 
-        let body_text = response.text().await?;
+        let body_text = String::from_utf8_lossy(&body_bytes).to_string();
         let api_error = parse_api_error(status, body_text.clone());
         error!(
             method = %method_for_log,
@@ -164,6 +188,10 @@ impl HetznerClient {
             status = %status,
             code = %api_error.code,
             request_id = request_id.as_deref().unwrap_or(""),
+            rate_limit_limit = rate_limit.limit,
+            rate_limit_remaining = rate_limit.remaining,
+            rate_limit_reset = rate_limit.reset,
+            retry_after = rate_limit.retry_after,
             elapsed_ms = start.elapsed().as_millis(),
             body_snippet = %truncate_for_log(&body_text, 1024),
             "hetzner request failed"
@@ -204,6 +232,8 @@ impl HetznerClient {
             .get("X-Request-Id")
             .and_then(|v| v.to_str().ok())
             .map(|v| v.to_owned());
+        let rate_limit = rate_limit_snapshot(response.headers());
+        let body_bytes = response.bytes().await?;
 
         if status.is_success() {
             debug!(
@@ -211,13 +241,16 @@ impl HetznerClient {
                 %url,
                 status = %status,
                 request_id = request_id.as_deref().unwrap_or(""),
+                rate_limit_limit = rate_limit.limit,
+                rate_limit_remaining = rate_limit.remaining,
+                rate_limit_reset = rate_limit.reset,
                 elapsed_ms = start.elapsed().as_millis(),
                 "hetzner request succeeded"
             );
             return Ok(());
         }
 
-        let body_text = response.text().await?;
+        let body_text = String::from_utf8_lossy(&body_bytes).to_string();
         let api_error = parse_api_error(status, body_text.clone());
         error!(
             method = %method_for_log,
@@ -225,6 +258,10 @@ impl HetznerClient {
             status = %status,
             code = %api_error.code,
             request_id = request_id.as_deref().unwrap_or(""),
+            rate_limit_limit = rate_limit.limit,
+            rate_limit_remaining = rate_limit.remaining,
+            rate_limit_reset = rate_limit.reset,
+            retry_after = rate_limit.retry_after,
             elapsed_ms = start.elapsed().as_millis(),
             body_snippet = %truncate_for_log(&body_text, 1024),
             "hetzner request failed"
@@ -329,6 +366,30 @@ fn truncate_for_log(body: &str, max_len: usize) -> String {
     } else {
         prefix
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct RateLimitSnapshot {
+    limit: Option<u64>,
+    remaining: Option<u64>,
+    reset: Option<u64>,
+    retry_after: Option<u64>,
+}
+
+fn rate_limit_snapshot(headers: &HeaderMap) -> RateLimitSnapshot {
+    RateLimitSnapshot {
+        limit: header_u64(headers, "RateLimit-Limit"),
+        remaining: header_u64(headers, "RateLimit-Remaining"),
+        reset: header_u64(headers, "RateLimit-Reset"),
+        retry_after: header_u64(headers, "Retry-After"),
+    }
+}
+
+fn header_u64(headers: &HeaderMap, name: &str) -> Option<u64> {
+    headers
+        .get(name)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.parse::<u64>().ok())
 }
 
 fn status_code_to_default_code(status: StatusCode) -> &'static str {

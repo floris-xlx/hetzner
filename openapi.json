@@ -49093,6 +49093,125 @@
       }
     },
     "schemas": {
+      "ErrorEnvelope": {
+        "title": "Standard Error Envelope",
+        "description": "Shared Hetzner error shape across Cloud and DNS APIs.",
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Machine-readable error code."
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable summary of the problem."
+              },
+              "details": {
+                "description": "Optional structured details; fields depend on the error code.",
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "example": {
+          "error": {
+            "code": "invalid_input",
+            "message": "invalid input in field 'name': is too long",
+            "details": {
+              "fields": [
+                {
+                  "name": "name",
+                  "messages": [
+                    "is too long"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PaginationMeta": {
+        "title": "Pagination Meta",
+        "description": "Standard pagination block returned by list endpoints.",
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 25
+          },
+          "previous_page": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "example": null
+          },
+          "next_page": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "example": 2
+          },
+          "last_page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 4
+          },
+          "total_entries": {
+            "type": "integer",
+            "format": "int32",
+            "example": 100
+          }
+        }
+      },
+      "RateLimitHeaders": {
+        "title": "Rate Limit Headers",
+        "description": "Response header values exposed by Hetzner APIs for throttling awareness.",
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Maximum requests in the current window.",
+            "example": 3600
+          },
+          "remaining": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Requests remaining in the current window.",
+            "example": 3520
+          },
+          "reset": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp when the window resets.",
+            "example": 1700000000
+          },
+          "retry_after": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Seconds to wait when rate limited (from `Retry-After`).",
+            "example": 15
+          }
+        }
+      },
       "ZonePrimary": {
         "title": "Primary Zone",
         "allOf": [
