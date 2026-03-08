@@ -23,11 +23,11 @@ version = "0.3.19"
 httpmock = "0.7.0"
 
 [package]
-authors = ["Floris floris@xylex.ai"]
-description = "A Rust library for managing DNS records and zones on Hetzner's platform, providing tools for networking and DNS management."
+authors = ["Floris floris@xylex.group"]
+description = "Complete SDK for Hetzner Cloud and MCP"
 edition = "2024"
 license = "MIT"
 name = "hetzner"
 readme = "README.md"
 repository = "https://github.com/floris-xlx/hetzner"
-version = "1.0.0"
+version = "2.0.0"
