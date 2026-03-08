@@ -57,7 +57,7 @@ use hetzner::HetznerClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = HetznerClient::new("tbzcPCFQOYdvw5udQKYpaGeeT32GvUix2Iw7T6z0ZVy22c5EnmTVCxgkYOz8b4p5");
+    let client = HetznerClient::new("HETZNER_CLOUD_API_TOKEN");
 
     // Legacy DNS domain usage (preferred over deprecated direct methods):
     let zones = client.dns().list_zones().await?;
@@ -74,7 +74,7 @@ use hetzner::{HetznerClient, ListServersParams};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = HetznerClient::new("tbzcPCFQOYdvw5udQKYpaGeeT32GvUix2Iw7T6z0ZVy22c5EnmTVCxgkYOz8b4p5");
+    let client = HetznerClient::new("HETZNER_CLOUD_API_TOKEN");
 
     let params = ListServersParams {
         per_page: Some(25),
@@ -96,7 +96,7 @@ use hetzner::{HetznerClient, ListActionsParams};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = HetznerClient::new("tbzcPCFQOYdvw5udQKYpaGeeT32GvUix2Iw7T6z0ZVy22c5EnmTVCxgkYOz8b4p5");
+    let client = HetznerClient::new("HETZNER_CLOUD_API_TOKEN");
 
     let actions = client
         .cloud()
@@ -118,7 +118,7 @@ use hetzner::HetznerClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = HetznerClient::new("tbzcPCFQOYdvw5udQKYpaGeeT32GvUix2Iw7T6z0ZVy22c5EnmTVCxgkYOz8b4p5");
+    let client = HetznerClient::new("HETZNER_CLOUD_API_TOKEN");
 
     // operationId: list_servers
     let servers = client.cloud().list_servers(None, None).await?;
@@ -151,7 +151,7 @@ Since a new project commonly has no servers yet, this is the expected empty list
 ### Example Request
 
 ```bash
-curl -H "Authorization: Bearer tbzcPCFQOYdvw5udQKYpaGeeT32GvUix2Iw7T6z0ZVy22c5EnmTVCxgkYOz8b4p5" \
+curl -H "Authorization: Bearer HETZNER_CLOUD_API_TOKEN" \
   https://api.hetzner.cloud/v1/servers
 ```
 
@@ -180,7 +180,7 @@ All requests to the Hetzner Cloud API must be authenticated with an API token.
 Use this header:
 
 ```text
-Authorization: Bearer tbzcPCFQOYdvw5udQKYpaGeeT32GvUix2Iw7T6z0ZVy22c5EnmTVCxgkYOz8b4p5
+Authorization: Bearer HETZNER_CLOUD_API_TOKEN
 ```
 
 To create a token: Hetzner Console -> Project -> Security -> API Tokens.
