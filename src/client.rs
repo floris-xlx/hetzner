@@ -146,7 +146,13 @@ impl HetznerClient {
         let body_bytes = response.bytes().await?;
 
         if status.is_success() {
-            match serde_json::from_slice::<T>(&body_bytes) {
+            // 204 No Content returns empty body; treat as JSON null for parsing
+            let body_to_parse = if body_bytes.is_empty() {
+                b"null" as &[u8]
+            } else {
+                &body_bytes
+            };
+            match serde_json::from_slice::<T>(body_to_parse) {
                 Ok(parsed) => {
                     debug!(
                         method = %method_for_log,
